@@ -9657,10 +9657,12 @@ function getTreasureSprite(size) {
     const weekLabels = ["一", "二", "三", "四", "五", "六", "日"];
     const firstDayIndex = (new Date(modal.deadlineCalendarYear, modal.deadlineCalendarMonth - 1, 1).getDay() + 6) % 7;
     const totalDays = daysInMonthLocal(modal.deadlineCalendarYear, modal.deadlineCalendarMonth);
-    const gridTop = y + 76;
-    const gap = 4;
+    const gridTop = y + 78;
+    const gap = width <= 400 ? 3 : 4;
     const cellW = Math.floor((width - headerPad * 2 - gap * 6) / 7);
-    const cellH = 22;
+    const cellH = Math.max(24, Math.floor((height - 92 - gap * 5) / 6));
+    const dayFontSize = clamp(Math.floor(Math.min(cellW * 0.62, cellH * 0.86)), 16, 25);
+    const dayMinFont = Math.max(14, dayFontSize - 5);
     const today = new Date();
     drawCard(targetCtx, x, y, width, height, THEME.paper);
     drawText(targetCtx, "截止日历", x + 18, y + 14, 16, THEME.inkSoft, "500");
@@ -9688,7 +9690,12 @@ function getTreasureSprite(size) {
       const selected = modal.deadlineYear === modal.deadlineCalendarYear
         && modal.deadlineMonth === modal.deadlineCalendarMonth
         && modal.deadlineDay === dayNumber;
-      drawButton(targetCtx, cellX, cellY, cellW, cellH, String(dayNumber), selected ? "yellow" : "paper", { small: true, active: selected });
+      drawButton(targetCtx, cellX, cellY, cellW, cellH, String(dayNumber), selected ? "yellow" : "paper", {
+        small: true,
+        active: selected,
+        fontSize: dayFontSize,
+        minFontSize: dayMinFont
+      });
       if (!selected
         && today.getFullYear() === modal.deadlineCalendarYear
         && (today.getMonth() + 1) === modal.deadlineCalendarMonth
@@ -9704,10 +9711,12 @@ function getTreasureSprite(size) {
   function renderCreateChallengeModal(targetCtx, view) {
     const modal = state.modal;
     ensureCreateChallengeModalDefaults(modal);
-    const width = Math.min(760, view.contentWidth - 80);
-    const height = modal.bucket === "todo" ? (modal.hasDeadline ? 774 : 560) : 460;
-    const x = (view.logicalWidth - width) / 2;
-    const y = Math.max(30, (view.logicalHeight - height) / 2);
+    const phoneLayout = view.width <= 640;
+    const calendarHeight = phoneLayout ? 270 : 248;
+    const width = Math.min(760, view.contentWidth - (phoneLayout ? 24 : 80));
+    const height = modal.bucket === "todo" ? (modal.hasDeadline ? (534 + calendarHeight) : 560) : 460;
+    const x = view.left + (view.contentWidth - width) / 2;
+    const y = Math.max(phoneLayout ? 14 : 30, (view.logicalHeight - height) / 2);
     drawPanel(targetCtx, x, y, width, height, THEME.frame);
     drawText(targetCtx, "建立新的挑战", x + 34, y + 44, 24, "#fff0dd", "700");
     drawText(targetCtx, modal.bucket === "todo" ? "To-do 可选截止日期，习惯和技能不需要" : "待办 / 习惯 / 技能", x + 34, y + 78, 16, "#d8aa95", "500");
@@ -9720,7 +9729,7 @@ function getTreasureSprite(size) {
     const fieldGap = 18;
     const availableW = innerW - 36;
     const halfFieldW = Math.floor((availableW - fieldGap) / 2);
-    const cardHeight = modal.bucket === "todo" ? (modal.hasDeadline ? 560 : 340) : 220;
+    const cardHeight = modal.bucket === "todo" ? (modal.hasDeadline ? (320 + calendarHeight) : 340) : 220;
     drawCard(targetCtx, left, cardY, innerW, cardHeight, THEME.paper);
     drawInputField(targetCtx, left + 18, cardY + 18, innerW - 36, 72, "挑战名称", getFieldValue("createChallengeTitle"), "例如：整理桌面", "createChallengeTitle", false);
 
@@ -9745,7 +9754,7 @@ function getTreasureSprite(size) {
         drawSelectorField(targetCtx, left + 18, deadlineRowY, modeW, 72, "截止日期", "有", toggleCreateChallengeDeadlineMode);
         drawInputField(targetCtx, left + 18 + modeW + fieldGap, deadlineRowY, timeFieldW, 72, "小时", getFieldValue("createChallengeDeadlineHour"), "09", "createChallengeDeadlineHour", true);
         drawInputField(targetCtx, left + 18 + modeW + fieldGap + timeFieldW + fieldGap, deadlineRowY, timeFieldW, 72, "分钟", getFieldValue("createChallengeDeadlineMinute"), "30", "createChallengeDeadlineMinute", true);
-        renderCreateChallengeCalendar(targetCtx, left + 18, deadlineRowY + 102, innerW - 36, 240, modal);
+        renderCreateChallengeCalendar(targetCtx, left + 18, deadlineRowY + 102, innerW - 36, calendarHeight, modal);
       } else {
         drawSelectorField(targetCtx, left + 18, deadlineRowY, innerW - 36, 72, "截止日期", "无", toggleCreateChallengeDeadlineMode);
         drawTextFitted(targetCtx, "选择“有”后，可用日历设置日期和具体时间。", left + 18, deadlineRowY + 108, innerW - 36, 16, THEME.inkSoft, "500", "left", 12);
